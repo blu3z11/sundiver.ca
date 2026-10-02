@@ -121,6 +121,7 @@
 		const nextTrack = 'spotify:track:088WAAsNCauHEEvgl5OUfk';
 		let playbackState = 'first';
 		let controller = null;
+		let transitionInProgress = false;
 
 		function showStartPage() {
 			document.getElementById('title').textContent = 'NOW PLAYING - ...';
@@ -128,6 +129,7 @@
 			document.getElementById('playButton').style.display = '';
 			document.body.classList.remove('playing');
 			playbackState = 'first';
+			transitionInProgress = false;
 		}
 
 		// Initialize Spotify API
@@ -142,14 +144,15 @@
 					var playback = event.data;
 					// Check if track is near the end
 					if (playback.duration > 0 && playback.position >= playback.duration - 500) {
-						if (playbackState === 'first') {
+						if (playbackState === 'first' && !transitionInProgress) {
 							// First track finished, load and play second track
-							playbackState = 'second-loading';
+							transitionInProgress = true;
+							playbackState = 'second';
 							ctrl.loadUri(nextTrack);
 							ctrl.play();
-							playbackState = 'second';
-						} else if (playbackState === 'second') {
+						} else if (playbackState === 'second' && !transitionInProgress) {
 							// Second track finished
+							transitionInProgress = true;
 							playbackState = 'finished';
 							ctrl.pause();
 							showStartPage();
@@ -164,6 +167,7 @@
 			if (controller) {
 				if (playbackState === 'finished' || playbackState === 'first') {
 					playbackState = 'first';
+					transitionInProgress = false;
 					controller.loadUri(firstTrack);
 				}
 				controller.play();
