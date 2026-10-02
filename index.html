@@ -9,40 +9,19 @@
 			color-scheme: light;
 			--paper: #ffffff;
 			--ink: #000000;
-			const firstTrack = 'spotify:track:6mU7czKCBwd61T9H3cbsIZ';
-			const nextTrack = 'spotify:track:088WAAsNCauHEEvgl5OUfk';
-			let playbackState = 'first';
-
-			function showStartPage() {
-				document.getElementById('title').textContent = 'NOW PLAYING - ...';
-				document.getElementById('title').classList.remove('comic-sans');
-				document.getElementById('playButton').style.display = '';
-				document.body.classList.remove('playing');
-			}
+			--text-yellow: #ffc403;
 			--background-blur: 6px;
 		}
 
-					uri: firstTrack,
+		* {
 			box-sizing: border-box;
 		}
 
 		html,
 		body {
-						const playback = event.data;
-						if (playback.duration <= 0 || playback.position < playback.duration - 500) {
-							if (playbackState === 'second-loading' && !playback.isPaused) {
-								playbackState = 'second';
-							}
-							return;
-						}
-
-						if (playbackState === 'first') {
-							playbackState = 'second-loading';
-							ctrl.loadUri(nextTrack);
-						} else if (playbackState === 'second') {
-							playbackState = 'finished';
-							ctrl.pause();
-							showStartPage();
+			width: 100%;
+			height: 100%;
+		}
 
 		body {
 			position: relative;
@@ -52,6 +31,11 @@
 			color: var(--ink);
 			background-color: var(--paper);
 			transition: color 0.3s ease, background-color 0.3s ease;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
 		}
 
 		body.playing {
@@ -82,6 +66,7 @@
 			font-weight: 700;
 			line-height: .85;
 			letter-spacing: 0;
+			text-align: center;
 		}
 
 		h1.comic-sans {
@@ -132,21 +117,41 @@
 	<div id="music" aria-hidden="true"></div>
 	<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
 	<script>
+		const firstTrack = 'spotify:track:6mU7czKCBwd61T9H3cbsIZ';
+		const nextTrack = 'spotify:track:088WAAsNCauHEEvgl5OUfk';
+		let playbackState = 'first';
 		let controller = null;
 
-		// Autoplay on page load
+		function showStartPage() {
+			document.getElementById('title').textContent = 'NOW PLAYING - ...';
+			document.getElementById('title').classList.remove('comic-sans');
+			document.getElementById('playButton').style.display = '';
+			document.body.classList.remove('playing');
+			playbackState = 'first';
+		}
+
+		// Initialize Spotify API
 		window.onSpotifyIframeApiReady = function (IFrameAPI) {
 			IFrameAPI.createController(document.getElementById('music'), {
-				uri: 'spotify:track:6mU7czKCBwd61T9H3cbsIZ',
+				uri: firstTrack,
 				width: '1',
 				height: '1'
 			}, function (ctrl) {
 				controller = ctrl;
 				ctrl.addListener('playback_update', function (event) {
 					var playback = event.data;
-					if (!playback.isPaused && playback.duration > 0 && playback.position >= playback.duration - 500) {
-						ctrl.seek(0);
-						ctrl.play();
+					// Check if track is near the end
+					if (playback.duration > 0 && playback.position >= playback.duration - 500) {
+						if (playbackState === 'first') {
+							// First track finished, load second track
+							playbackState = 'second-loading';
+							ctrl.loadUri(nextTrack);
+						} else if (playbackState === 'second') {
+							// Second track finished
+							playbackState = 'finished';
+							ctrl.pause();
+							showStartPage();
+						}
 					}
 				});
 			});
@@ -155,7 +160,7 @@
 		// Handle play button click
 		document.getElementById('playButton').addEventListener('click', function () {
 			if (controller) {
-				if (playbackState === 'finished') {
+				if (playbackState === 'finished' || playbackState === 'first') {
 					playbackState = 'first';
 					controller.loadUri(firstTrack);
 				}
