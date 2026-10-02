@@ -143,9 +143,11 @@
 					// Check if track is near the end
 					if (playback.duration > 0 && playback.position >= playback.duration - 500) {
 						if (playbackState === 'first') {
-							// First track finished, load second track
+							// First track finished, load and play second track
 							playbackState = 'second-loading';
 							ctrl.loadUri(nextTrack);
+							ctrl.play();
+							playbackState = 'second';
 						} else if (playbackState === 'second') {
 							// Second track finished
 							playbackState = 'finished';
